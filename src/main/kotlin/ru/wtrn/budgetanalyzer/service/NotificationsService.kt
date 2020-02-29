@@ -11,7 +11,8 @@ import ru.wtrn.telegram.service.TelegramMessageService
 @Service
 class NotificationsService(
     private val telegramMessageService: TelegramMessageService,
-    private val budgetAnalyzerTelegramProperties: BudgetAnalyzerTelegramProperties
+    private val budgetAnalyzerTelegramProperties: BudgetAnalyzerTelegramProperties,
+    private val dashboardEventerService: DashboardEventerService
 ) {
     suspend fun sendTransactionNotification(transactionEntity: TransactionEntity, resultingLimits: LimitsService.ResultingLimits) {
         val text = """
@@ -23,6 +24,8 @@ class NotificationsService(
             
             ${transactionEntity.amount} ${transactionEntity.merchant}
             """.trimIndent()
+
+        dashboardEventerService.sendDashboardEvent(resultingLimits)
 
         telegramMessageService.sendMessage(
             chat = budgetAnalyzerTelegramProperties.targetChat,
@@ -43,6 +46,8 @@ class NotificationsService(
             
             $amount ${description ?: ""}
             """.trimIndent()
+
+        dashboardEventerService.sendDashboardEvent(resultingLimits)
 
         telegramMessageService.sendMessage(
             chat = budgetAnalyzerTelegramProperties.targetChat,
