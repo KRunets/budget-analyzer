@@ -25,13 +25,15 @@ class LimitsService(
         val monthLimit = (foundLimits[CurrentLimitEntity.LimitTimespan.MONTH] ?: constructMonthLimit())
         val dayLimit = foundLimits[CurrentLimitEntity.LimitTimespan.DAY] ?: constructDayLimit(monthLimit)
 
-        currentLimitRepository.increaseSpentAmount(
-            limitIds = listOf(monthLimit.id, dayLimit.id),
-            amountValue = amount.value
-        )
+        if (amount.value != BigDecimal.ZERO) {
+            currentLimitRepository.increaseSpentAmount(
+                limitIds = listOf(monthLimit.id, dayLimit.id),
+                amountValue = amount.value
+            )
 
-        listOf(dayLimit, monthLimit).forEach {
-            it.spentValue += amount.value
+            listOf(dayLimit, monthLimit).forEach {
+                it.spentValue += amount.value
+            }
         }
 
         val nextDay = dayLimit.periodStart.plusDays(1)

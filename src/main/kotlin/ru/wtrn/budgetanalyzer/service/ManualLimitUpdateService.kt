@@ -17,14 +17,12 @@ class ManualLimitUpdateService(
         description: String?,
         user: String
     ) {
-        if (amount.value != BigDecimal.ZERO) {
-            val entity = ManualLimitUpdateEntity(
-                amountValue = amount.value,
-                description = description,
-                author = user
-            )
-            manualLimitUpdateRepository.insert(entity)
-        }
+        val entity = ManualLimitUpdateEntity(
+            amountValue = amount.value,
+            description = description,
+            author = user
+        )
+        manualLimitUpdateRepository.insert(entity)
 
         val resultingLimits = limitsService.increaseSpentAmount(amount)
         notificationsService.sendManualLimitUpdateNotification(

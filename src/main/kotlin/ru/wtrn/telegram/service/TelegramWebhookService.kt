@@ -2,16 +2,13 @@ package ru.wtrn.telegram.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
 import mu.KotlinLogging
 import org.springframework.stereotype.Service
 import ru.wtrn.budgetanalyzer.configuration.properties.BudgetAnalyzerTelegramProperties
 import ru.wtrn.budgetanalyzer.configuration.properties.LimitsProperties
 import ru.wtrn.budgetanalyzer.model.Amount
-import ru.wtrn.budgetanalyzer.service.LimitsService
+import ru.wtrn.budgetanalyzer.service.CurrentLimitsNotifier
 import ru.wtrn.budgetanalyzer.service.ManualLimitUpdateService
-import ru.wtrn.budgetanalyzer.service.NotificationsService
 import ru.wtrn.telegram.configuration.properties.TelegramProperties
 import ru.wtrn.telegram.dto.hook.TelegramUpdate
 import ru.wtrn.telegram.exception.IncorrectWebhookKeyException
@@ -25,7 +22,8 @@ class TelegramWebhookService(
     private val budgetAnalyzerTelegramProperties: BudgetAnalyzerTelegramProperties,
     private val telegramMessageService: TelegramMessageService,
     private val manualLimitUpdateService: ManualLimitUpdateService,
-    private val limitsProperties: LimitsProperties
+    private val limitsProperties: LimitsProperties,
+    private val currentLimitsNotifier: CurrentLimitsNotifier
 ) {
     private val logger = KotlinLogging.logger { }
 
@@ -67,10 +65,13 @@ class TelegramWebhookService(
             currency = limitsProperties.currency
         )
 
-        manualLimitUpdateService.increaseSpentAmount(
-            amount = amount,
-            description = description,
-            user = message.from.username ?: message.from.id.toString()
-        )
+        when(amount.value) {
+            BigDecimal.ZERO -> currentLimitsNotifier.sendCurrentLimitsNotification()
+            else -> manualLimitUpdateService.increaseSpentAmount(
+                amount = amount,
+                description = description,
+                user = message.from.username ?: message.from.id.toString()
+            )
+        }
     }
 }

@@ -54,4 +54,22 @@ class NotificationsService(
             text = text
         )
     }
+
+    suspend fun notifyScheduledLimitsUpdate(
+        resultingLimits: LimitsService.ResultingLimits
+    ) {
+        val text = """
+            Баланс: ${resultingLimits.budgetBalanceAmount}
+            До конца месяца: ${resultingLimits.monthLimit.remainingAmount}
+            Сегодня: ${resultingLimits.todayLimit.remainingAmount} 
+            Завтра: ${resultingLimits.nextDayCalculatedLimit.limitAmount}
+            """.trimIndent()
+
+        dashboardEventerService.sendDashboardEvent(resultingLimits)
+
+        telegramMessageService.sendMessage(
+            chat = budgetAnalyzerTelegramProperties.targetChat,
+            text = text
+        )
+    }
 }
