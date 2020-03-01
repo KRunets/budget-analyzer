@@ -39,11 +39,13 @@ class TelegramWebhookService(
         update.message?.let {
             handleMessage(it)
         }
+        logger.info { "Hook handling completed" }
     }
 
     suspend fun handleMessage(message: TelegramUpdate.Message) {
         if (message.chat.id != budgetAnalyzerTelegramProperties.targetChat) {
             telegramMessageService.sendMessage(message.chat.id, "This chat is not whitelisted")
+            return
         }
         handleManualLimitDecreaseMessage(message)
     }

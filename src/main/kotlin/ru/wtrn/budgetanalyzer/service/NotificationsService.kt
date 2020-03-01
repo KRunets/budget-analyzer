@@ -1,5 +1,6 @@
 package ru.wtrn.budgetanalyzer.service
 
+import mu.KotlinLogging
 import org.springframework.stereotype.Service
 import ru.wtrn.budgetanalyzer.configuration.properties.BudgetAnalyzerTelegramProperties
 import ru.wtrn.budgetanalyzer.entity.TransactionEntity
@@ -14,6 +15,8 @@ class NotificationsService(
     private val budgetAnalyzerTelegramProperties: BudgetAnalyzerTelegramProperties,
     private val dashboardEventerService: DashboardEventerService
 ) {
+    private val logger = KotlinLogging.logger {  }
+
     suspend fun sendTransactionNotification(transactionEntity: TransactionEntity, resultingLimits: LimitsService.ResultingLimits) {
         val text = """
             Баланс: ${resultingLimits.budgetBalanceAmount}

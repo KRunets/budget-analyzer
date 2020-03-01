@@ -1,5 +1,6 @@
 package ru.wtrn.budgetanalyzer.service
 
+import mu.KotlinLogging
 import org.springframework.stereotype.Service
 import ru.wtrn.budgetanalyzer.configuration.properties.LimitsProperties
 import ru.wtrn.budgetanalyzer.entity.CurrentLimitEntity
@@ -16,11 +17,17 @@ class LimitsService(
     private val currentLimitRepository: CurrentLimitRepository,
     private val limitsProperties: LimitsProperties
 ) {
+    private val logger = KotlinLogging.logger {  }
+
     suspend fun increaseSpentAmount(amount: Amount): ResultingLimits {
+        logger.info { "Increasing spent amount: $amount" }
+
         val foundLimits = currentLimitRepository.findActiveLimits(
             currency = amount.currency
         )
             .associateBy { it.timespan }
+
+        logger.trace { "Found limits: $foundLimits" }
 
         val monthLimit = (foundLimits[CurrentLimitEntity.LimitTimespan.MONTH] ?: constructMonthLimit())
         val dayLimit = foundLimits[CurrentLimitEntity.LimitTimespan.DAY] ?: constructDayLimit(monthLimit)
@@ -34,6 +41,7 @@ class LimitsService(
             listOf(dayLimit, monthLimit).forEach {
                 it.spentValue += amount.value
             }
+            logger.trace { "Limits updated: $monthLimit $dayLimit" }
         }
 
         val nextDay = dayLimit.periodStart.plusDays(1)
@@ -62,6 +70,7 @@ class LimitsService(
             )
         }
 
+        logger.trace { "Limits increase completed" }
 
         return ResultingLimits(
             todayLimit = dayLimit,
